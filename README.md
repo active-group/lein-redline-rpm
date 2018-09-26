@@ -2,9 +2,11 @@
 
 A pure java RPM Leiningen plugin
 
+Forked from [https://github.com/pausebreak/lein-redline-rpm](https://github.com/pausebreak/lein-redline-rpm).
+
 ## Usage
 
-Add `lein-redline-rpm "0.4.3"` to `:plugins` in your `project.clj` as well as
+Add `de.active-group/lein-redline-rpm "0.4.4"` to `:plugins` in your `project.clj` as well as
 configure `:rpm`
 
 ```
