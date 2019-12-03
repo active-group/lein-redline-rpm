@@ -12,8 +12,8 @@
 (def username (System/getProperty "user.name"))
 
 (defn- rpm-path
-  [package-name package-version]
-  (str "target/" package-name "-" package-version ".rpm"))
+  [package-name package-version package-release]
+  (str "target/" package-name "-" package-version "-" package-release ".rpm"))
 
 (defn- create-directories
   [builder dirs]
@@ -91,20 +91,21 @@
       (info "->" dir)
       (.addBuiltinDirectory builder dir))))
 
-(defn- fix-package-version
-  "Dashes are not allowed in RPM package version strings; that collides with
-  Leiningen's `-SNAPSHOT` package versions.  To make building SNAPSHOT RPMs
-  work, rewrite that portion of the package version."
-  [package-version]
-  (string/replace package-version
-                  "-SNAPSHOT"
-                  (str "SNAPSHOT" (.format (java.text.SimpleDateFormat. "yyyymmddHHMMSS") (new java.util.Date)))))
+(defn- fix-package-version-and-release
+  "If version is a SNAPSHOT version, generate a SNAPSHOT release identifier."
+  [package-version package-release]
+  (if (re-find #"-SNAPSHOT" package-version)
+    [(string/replace package-version "-SNAPSHOT" "")
+     (str "SNAPSHOT" (.format (java.text.SimpleDateFormat. "yyyyMMddhhmmss") (new java.util.Date)))]
+    [package-version
+     package-release]))
 
 (defn rpm
   "Java based RPM generator"
   [{:keys [license description url version root rpm] :as project} & args]
-  (let [package-version (fix-package-version (:version rpm version))
-        filepath (rpm-path (:package-name rpm) package-version)
+  (let [[package-version package-release]
+        (fix-package-version-and-release (:version rpm version) (:release rpm))
+        filepath (rpm-path (:package-name rpm) package-version package-release)
         f (file filepath)
         file-channel (.getChannel (RandomAccessFile. f "rw"))
         pre-install-script (file (:pre-install-script rpm))
@@ -119,7 +120,7 @@
       (.setDistribution (:distribution rpm))
       (.setGroup (:group rpm))
       (.setLicense (:name license))
-      (.setPackage (:package-name rpm) package-version (:release rpm))
+      (.setPackage (:package-name rpm) package-version package-release)
       (.setPackager (:packager rpm))
       (.setPlatform (Architecture/valueOf "X86_64") (Os/valueOf "LINUX"))
       (.setSummary (:summary rpm))
