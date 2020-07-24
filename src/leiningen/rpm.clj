@@ -96,7 +96,7 @@
   [package-version package-release]
   (if (re-find #"-SNAPSHOT" package-version)
     [(string/replace package-version "-SNAPSHOT" "")
-     (str "SNAPSHOT" (.format (java.text.SimpleDateFormat. "yyyyMMddhhmmss") (new java.util.Date)))]
+     (str "SNAPSHOT" (.format (java.text.SimpleDateFormat. "yyyyMMddHHmmss") (new java.util.Date)))]
     [package-version
      package-release]))
 
